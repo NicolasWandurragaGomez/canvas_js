@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ejemplos HTML Canvas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    section {
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      width: 450px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    canvas {
+      border: 1px solid #000;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Guía práctica: HTML Canvas</h1>
+
+  <!-- Módulo 1 -->
+  <section>
+    <h2>Módulo 1: Figuras básicas</h2>
+    <canvas id="canvas1" width="400" height="300"></canvas>
+  </section>
+
+  <!-- Módulo 2 -->
+  <section>
+    <h2>Módulo 2: Animaciones</h2>
+    <canvas id="canvas2" width="400" height="300"></canvas>
+  </section>
+
+  <!-- Módulo 3 -->
+  <section>
+    <h2>Módulo 3: Colisiones (Ladrillos)</h2>
+    <canvas id="canvas3" width="400" height="300"></canvas>
+  </section>
+
+  <script>
+  // ================================
+  // MÓDULO 1: FIGURAS BÁSICAS
+  // ================================
+  const canvas1 = document.getElementById("canvas1");
+  const ctx1 = canvas1.getContext("2d");
+
+  // Rectángulos
+  ctx1.fillRect(25, 25, 100, 100);
+  ctx1.clearRect(45, 45, 60, 60);
+  ctx1.strokeRect(50, 50, 50, 50);
+
+  // Triángulo contorneado
+  ctx1.beginPath();
+  ctx1.moveTo(200, 125);
+  ctx1.lineTo(200, 45);
+  ctx1.lineTo(120, 125);
+  ctx1.closePath();
+  ctx1.stroke();
+
+  // Círculo sonriente
+  ctx1.beginPath();
+  ctx1.arc(300, 100, 50, 0, Math.PI * 2, true); // cara
+  ctx1.moveTo(330, 100);
+  ctx1.arc(300, 100, 30, 0, Math.PI, false); // boca
+  ctx1.moveTo(285, 85);
+  ctx1.arc(280, 85, 5, 0, Math.PI * 2, true); // ojo izq
+  ctx1.moveTo(325, 85);
+  ctx1.arc(320, 85, 5, 0, Math.PI * 2, true); // ojo der
+  ctx1.stroke();
+
+
+  // ================================
+  // MÓDULO 2: ANIMACIÓN Y REBOTE
+  // ================================
+  const canvas2 = document.getElementById("canvas2");
+  const ctx2 = canvas2.getContext("2d");
+
+  let x = 50, y = 50;
+  let speedX = 3, speedY = 3;
+
+  function animateDiagonal() {
+    ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+    ctx2.fillStyle = "red";
+    ctx2.fillRect(x, y, 20, 20);
+
+    x += speedX;
+    y += speedY;
+
+    // Rebote
+    if (x + 20 > canvas2.width || x < 0) speedX = -speedX;
+    if (y + 20 > canvas2.height || y < 0) speedY = -speedY;
+
+    requestAnimationFrame(animateDiagonal);
+  }
+  animateDiagonal();
+
+
+  // ================================
+  // MÓDULO 3: COLISIONES CON LADRILLOS
+  // ================================
+  const canvas3 = document.getElementById("canvas3");
+  const ctx3 = canvas3.getContext("2d");
+
+  const brickRowCount = 3;
+  const brickColumnCount = 5;
+  const brickWidth = 70;
+  const brickHeight = 20;
+  const brickPadding = 10;
+  const offsetTop = 30;
+  const offsetLeft = 20;
+
+  let ballX = 200;
+  let ballY = 200;
+  let dx = 3;
+  let dy = -3;
+  const ballRadius = 8;
+
+  let bricks = [];
+  for (let c = 0; c < brickColumnCount; c++) {
+    bricks[c] = [];
+    for (let r = 0; r < brickRowCount; r++) {
+      const brickX = c * (brickWidth + brickPadding) + offsetLeft;
+      const brickY = r * (brickHeight + brickPadding) + offsetTop;
+      bricks[c][r] = { x: brickX, y: brickY, status: 1 };
+    }
+  }
+
+  function drawBricks() {
+    for (let c = 0; c < brickColumnCount; c++) {
+      for (let r = 0; r < brickRowCount; r++) {
+        if (bricks[c][r].status === 1) {
+          const b = bricks[c][r];
+          ctx3.fillStyle = "blue";
+          ctx3.fillRect(b.x, b.y, brickWidth, brickHeight);
+        }
+      }
+    }
+  }
+
+  function collisionDetection() {
+    for (let c = 0; c < brickColumnCount; c++) {
+      for (let r = 0; r < brickRowCount; r++) {
+        const b = bricks[c][r];
+        if (b.status === 1) {
+          if (
+            ballX > b.x &&
+            ballX < b.x + brickWidth &&
+            ballY > b.y &&
+            ballY < b.y + brickHeight
+          ) {
+            dy = -dy;
+            b.status = 0;
+          }
+        }
+      }
+    }
+  }
+
+  function drawBall() {
+    ctx3.beginPath();
+    ctx3.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+    ctx3.fillStyle = "red";
+    ctx3.fill();
+    ctx3.closePath();
+  }
+
+  function drawGame() {
+    ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
+    drawBricks();
+    drawBall();
+    collisionDetection();
+
+    ballX += dx;
+    ballY += dy;
+
+    // Rebote en bordes
+    if (ballX + dx > canvas3.width - ballRadius || ballX + dx < ballRadius) dx = -dx;
+    if (ballY + dy < ballRadius || ballY + dy > canvas3.height - ballRadius) dy = -dy;
+
+    requestAnimationFrame(drawGame);
+  }
+
+  drawGame();
+  </script>
+
+</body>
+</html>
